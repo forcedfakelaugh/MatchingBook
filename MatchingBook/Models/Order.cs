@@ -44,6 +44,28 @@ namespace MatchingBook.Models
         /// </summary>
         /// <value></value>
         public DateTime CreateDate { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// Display size for Iceberge order type
+        /// </summary>
+        public int DisplaySize { get; set; } = 0;
+
+        public int RemaingingSize { get; set; } = 0;
+
+        public Order Clone()
+        {
+            return new Order
+            {
+                Id = this.Id,
+                Side = this.Side,
+                Price = this.Price,
+                Quantity = this.Quantity,
+                OrderType = this.OrderType,
+                CreateDate = this.CreateDate,
+                DisplaySize = this.DisplaySize,
+                RemaingingSize = this.RemaingingSize,
+            };
+        }
     }
 
     /// <summary>
@@ -59,7 +81,22 @@ namespace MatchingBook.Models
         /// <summary>
         /// Market order.
         /// </summary>
-        MO
+        MO,
+
+        /// <summary>
+        /// Immediate-or-Cancel order
+        /// </summary>
+        IOC,
+
+        /// <summary>
+        /// Fill-or-Kill order
+        /// </summary>
+        FOK,
+
+        /// <summary>
+        /// Iceberg order
+        /// </summary>
+        ICE
     }
 
     /// <summary>

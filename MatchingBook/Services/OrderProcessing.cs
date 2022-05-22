@@ -32,16 +32,19 @@ namespace MatchingBook.Services
             if (parsedResult.Cancel)
             {
                 _orderService.ExecuteCancelOrder(parsedResult.Order, book);
+                // _orderService.ExecuteEnd(book);
                 return new ProcessOrderResponse();
             }
 
-            int? totalCost = null;
-            switch (parsedResult.Order.OrderType)
+            if (parsedResult.Update)
             {
-                case OrderType.LO: totalCost = _orderService.ExecuteLimitOrder(parsedResult.Order, book).TotalPrice; break;
-                case OrderType.MO: totalCost = _orderService.ExecuteMarketOrder(parsedResult.Order, book).TotalPrice; break;
-                default: break;
+                _orderService.ExecuteUpdateOrder(parsedResult.Order, book);
+                // _orderService.ExecuteEnd(book);
+                return new ProcessOrderResponse();
             }
+
+            int totalCost = _orderService.ExecuteGenericOrders(parsedResult.Order, book).TotalPrice;
+            // _orderService.ExecuteEnd(book);
 
             return new ProcessOrderResponse { TotalCost = totalCost };
         }

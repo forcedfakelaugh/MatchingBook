@@ -26,8 +26,6 @@ namespace MatchingBook
                     Console.WriteLine(totalCost);
                 }
             }
-
-            Console.WriteLine("Ket thuc---");
         }
     }
 }

@@ -1,11 +1,183 @@
-﻿using MatchingBook.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+namespace MatchingBook.Models
+{
+    /// <summary>
+    /// Represent an order to execute
+    /// </summary>
+    public class Order
+    {
+        /// <summary>
+        /// Identifier of this order
+        /// </summary>
+        /// <value></value>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Buy or Sell
+        /// </summary>
+        /// <value></value>
+        public Side Side { get; set; }
+
+        /// <summary>
+        /// Price of a single stock
+        /// </summary>
+        /// <value></value>
+        public int Price { get; set; }
+
+        /// <summary>
+        /// Number of stocks 
+        /// </summary>
+        /// <value></value>
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Type of this order
+        /// </summary>
+        /// <value></value>
+        public OrderType OrderType { get; set; }
+
+        /// <summary>
+        /// Create date of this order
+        /// </summary>
+        /// <value></value>
+        public DateTime CreateDate { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// Display size for Iceberge order type
+        /// </summary>
+        public int DisplaySize { get; set; } = 0;
+
+        public int RemaingingSize { get; set; } = 0;
+
+        public Order Clone()
+        {
+            return new Order
+            {
+                Id = this.Id,
+                Side = this.Side,
+                Price = this.Price,
+                Quantity = this.Quantity,
+                OrderType = this.OrderType,
+                CreateDate = this.CreateDate,
+                DisplaySize = this.DisplaySize,
+                RemaingingSize = this.RemaingingSize,
+            };
+        }
+    }
+
+    /// <summary>
+    /// Type of order
+    /// </summary>
+    public enum OrderType
+    {
+        /// <summary>
+        /// Limit order.
+        /// </summary>
+        LO,
+
+        /// <summary>
+        /// Market order.
+        /// </summary>
+        MO,
+
+        /// <summary>
+        /// Immediate-or-Cancel order
+        /// </summary>
+        IOC,
+
+        /// <summary>
+        /// Fill-or-Kill order
+        /// </summary>
+        FOK,
+
+        /// <summary>
+        /// Iceberg order
+        /// </summary>
+        ICE
+    }
+
+    /// <summary>
+    /// Side of order
+    /// </summary>
+    public enum Side
+    {
+        /// <summary>
+        /// An order to buy stock
+        /// </summary>
+        Buy,
+
+        /// <summary>
+        /// An order to sell stock
+        /// </summary>
+        Sell
+    }
+
+    /// <summary>
+    /// Represent an order book that stored the pending selling and buying orders
+    /// </summary>
+    public class OrderBook
+    {
+        /// <summary>
+        /// Pending buying orders
+        /// </summary>
+        /// <value></value>
+        public List<Order> BuyOrders { get; set; } = new List<Order>();
+
+        /// <summary>
+        /// Pending selling orders
+        /// </summary>
+        /// <value></value>
+        public List<Order> SellOrders { get; set; } = new List<Order>();
+    }
+}
 
 namespace MatchingBook.Services
 {
+    public class ProcessOrderResponse 
+    {
+        public int? TotalCost { get; set; }
+        public bool StopProcessing { get; set; }
+    }
+
+    public class OrderProcessing 
+    {
+        private readonly OrderService _orderService;
+
+        public OrderProcessing(OrderService orderService)
+        {
+            _orderService = orderService;
+        }
+
+        public ProcessOrderResponse ProcessOrder(string input, OrderBook book)
+        {
+            Console.WriteLine(input);
+            var parsedResult = _orderService.ProcessInputOrder(input);
+
+            if (parsedResult.End) {
+                _orderService.ExecuteEnd(book);
+                return new ProcessOrderResponse { StopProcessing = true };
+            }
+
+            if (parsedResult.Cancel)
+            {
+                _orderService.ExecuteCancelOrder(parsedResult.Order, book);
+                // _orderService.ExecuteEnd(book);
+                return new ProcessOrderResponse();
+            }
+
+            if (parsedResult.Update)
+            {
+                _orderService.ExecuteUpdateOrder(parsedResult.Order, book);
+                // _orderService.ExecuteEnd(book);
+                return new ProcessOrderResponse();
+            }
+
+            int totalCost = _orderService.ExecuteGenericOrders(parsedResult.Order, book).TotalPrice;
+            // _orderService.ExecuteEnd(book);
+
+            return new ProcessOrderResponse { TotalCost = totalCost };
+        }
+    }
+
     /// <summary>
     /// Response after parsing order input
     /// </summary>
